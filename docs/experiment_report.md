@@ -166,9 +166,11 @@ Task `shakespeare_completion`: 16× `my lord` then overwrite with `my love`.
 
 ## 10. Conclusions
 
-### Classification: **B**
+The research deliverable is [`conclusion.md`](conclusion.md). Classification: **B — short-term adaptive memory.**
 
-Experience changes subsequent processing but effects decay on short distractor horizons (working-memory-like).
+Experience changes subsequent processing without changing slow weights. Reset of ρ removes the gap. A single extra filler byte can collapse the association (and the decay curve is not monotonic), so this is not a durable store (not C/D).
+
+Raw headline numbers from the mixed Red/Blue run follow; dedicated-task and prior-relative numbers are in the conclusion.
 
 ### Headline (Agent Red / Agent Blue)
 

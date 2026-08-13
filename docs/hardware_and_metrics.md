@@ -116,4 +116,4 @@ Empty prior on `my lo`: P(`r`)=0.636, P(`v`)=0.181 (model already prefers “lor
 
 Clean-filler decay after 8× `my love`: 1 extra byte can collapse P(`v`). Reset after B vs empty prior JS=0.
 
-Full narrative: [`experiment_report.md`](experiment_report.md).
+Deliverable: [`conclusion.md`](conclusion.md). Numbers: [`experiment_report.md`](experiment_report.md).

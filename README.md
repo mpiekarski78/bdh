@@ -10,18 +10,20 @@ A measurement harness around **unmodified** upstream `bdh.py` / `train.py` to an
 
 > Can two identical BDH models (same weights, same initial dynamic state) diverge internally and behaviorally after different experience histories **without** changing slow learned weights?
 
-**Result (reported run): Category B — short-term adaptive memory.**
+**Result: Category B — short-term adaptive memory.**  
+Full write-up: [`docs/conclusion.md`](docs/conclusion.md).
+
+Two copies of the same checkpoint diverge in ρ and in next-byte distributions after different prefixes; slow weights do not change; reset of ρ removes the gap. The effect can briefly steer against a pretrained prior (`my love` raises P(`v`)) but is fragile (1 extra byte can wipe it) and is not a durable fact store.
 
 | Check | Outcome |
 |-------|---------|
 | Same architecture / same checkpoint | yes |
 | Trainable weights after experience | unchanged (SHA256) |
 | Dynamic state ρ after different histories | diverges (L2 ≫ 0) |
-| Same probe, different output distributions | yes (v1 JS ≈ 0.26; v2 dedicated-task JS ≈ 0.57) |
+| Same probe, different output distributions | yes (dedicated-task JS ≈ 0.57) |
 | Reset ρ then re-probe | divergence disappears (JS → 0) |
 | Snapshot → restore | exact match |
-
-Interpretation: experience modifies inference-time state and subsequent processing, but the effect behaves like working memory (cleared by reset), not a durable long-term associative store.
+| Lasting association under new tokens | **no** |
 
 ### Experiment progression
 
@@ -33,12 +35,13 @@ Interpretation: experience modifies inference-time state and subsequent processi
 | 4 Divergence suite | done | v1 synthetic bytes; v2 Shakespeare completions |
 | 5 Red / Blue headline | done | Same weights, different lives |
 | 5b Prior-relative association | done | B can raise P(v) vs prior; A does not raise P(r); 1 distractor byte can wipe it |
-| 6 Cross-process persistence | partial | In-process restore is exact; longer-lived association still unproven |
-| 7 Explicit memory store | not started | Out of scope until Category C/D |
+| 6 Cross-process persistence | not pursued | In-process restore is exact; associations do not last — not C/D |
+| 7 Explicit memory store | out of scope | Conclusion: keep facts explicit; ρ is session residue only |
+| Deliverable | done | [`docs/conclusion.md`](docs/conclusion.md) |
 
 Default probe task is now **`shakespeare_completion`** (`my lord` / `my love`). The original `symbol_association` protocol is kept for comparison (`--task symbol_association`).
 
-Dated history: [`docs/CHANGELOG.md`](docs/CHANGELOG.md). Full report: [`docs/experiment_report.md`](docs/experiment_report.md).
+Dated history: [`docs/CHANGELOG.md`](docs/CHANGELOG.md). Conclusion: [`docs/conclusion.md`](docs/conclusion.md). Numbers: [`docs/experiment_report.md`](docs/experiment_report.md).
 
 ### Layout
 
@@ -69,6 +72,7 @@ tests/                    # recurrent ρ ≡ full-sequence attention
 
 Full write-up:
 
+- [`docs/conclusion.md`](docs/conclusion.md)
 - [`docs/hardware_and_metrics.md`](docs/hardware_and_metrics.md)
 - [`docs/experiment_report.md`](docs/experiment_report.md)
 - [`docs/experiment_protocol.md`](docs/experiment_protocol.md)
@@ -83,8 +87,8 @@ python3 -m venv .venv && source .venv/bin/activate
 pip install torch --index-url https://download.pytorch.org/whl/cu130
 pip install numpy requests matplotlib
 
-# train + save checkpoint (logged run dir under runs/)
-python -m experiments.baseline.run_baseline --checkpoint checkpoints/base.pt
+# train once + save checkpoint (logged run dir under runs/; overwrites the path)
+python -m experiments.baseline.run_baseline --checkpoint checkpoints/base.pt --no-compile
 
 python tests/test_equivalence.py
 python -m experiments.divergence.run_divergence --checkpoint checkpoints/base.pt --task shakespeare_completion
