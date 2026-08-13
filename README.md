@@ -17,11 +17,27 @@ A measurement harness around **unmodified** upstream `bdh.py` / `train.py` to an
 | Same architecture / same checkpoint | yes |
 | Trainable weights after experience | unchanged (SHA256) |
 | Dynamic state ρ after different histories | diverges (L2 ≫ 0) |
-| Same probe, different output distributions | yes (JS ≈ 0.26) |
+| Same probe, different output distributions | yes (v1 JS ≈ 0.26; v2 dedicated-task JS ≈ 0.57) |
 | Reset ρ then re-probe | divergence disappears (JS → 0) |
 | Snapshot → restore | exact match |
 
 Interpretation: experience modifies inference-time state and subsequent processing, but the effect behaves like working memory (cleared by reset), not a durable long-term associative store.
+
+### Experiment progression
+
+| Phase | Status | Notes |
+|-------|--------|-------|
+| 1 Reproduce BDH | done | Full train on GB10; loss 5.65 → 0.11 |
+| 2 State map | done | [`docs/state_map.md`](docs/state_map.md) |
+| 3 Instrumentation | done | `StatefulBDH` ρ snapshot/reset/load |
+| 4 Divergence suite | done | v1 synthetic bytes; v2 Shakespeare completions |
+| 5 Red / Blue headline | done | Same weights, different lives |
+| 6 Cross-process persistence | partial | In-process restore is exact; longer-lived association still unproven |
+| 7 Explicit memory store | not started | Out of scope until Category C/D |
+
+Default probe task is now **`shakespeare_completion`** (`my lord` / `my love`). The original `symbol_association` protocol is kept for comparison (`--task symbol_association`).
+
+Dated history: [`docs/CHANGELOG.md`](docs/CHANGELOG.md). Full report: [`docs/experiment_report.md`](docs/experiment_report.md).
 
 ### Layout
 
@@ -56,6 +72,7 @@ Full write-up:
 - [`docs/experiment_report.md`](docs/experiment_report.md)
 - [`docs/experiment_protocol.md`](docs/experiment_protocol.md)
 - [`docs/state_map.md`](docs/state_map.md)
+- [`docs/CHANGELOG.md`](docs/CHANGELOG.md)
 - [`docs/FORK.md`](docs/FORK.md)
 
 ### Quick start (this fork)
@@ -69,7 +86,7 @@ pip install numpy requests matplotlib
 python -m experiments.baseline.run_baseline --checkpoint checkpoints/base.pt
 
 python tests/test_equivalence.py
-python -m experiments.divergence.run_divergence --checkpoint checkpoints/base.pt
+python -m experiments.divergence.run_divergence --checkpoint checkpoints/base.pt --task shakespeare_completion
 python -m experiments.report.run_red_blue --checkpoint checkpoints/base.pt
 python -m experiments.report.run_report
 ```

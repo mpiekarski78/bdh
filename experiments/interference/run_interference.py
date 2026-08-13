@@ -16,7 +16,7 @@ from analysis.plots import plot_multi
 from experiments.common.checkpoint import clone_model, load_checkpoint
 from experiments.common.hashing import hash_trainable_params
 from experiments.common.metrics import association_strength
-from experiments.common.probes import encode_bytes
+from experiments.common.probes import TASKS, encode_bytes
 from experiments.common.run_io import init_run, write_json, write_summary
 from experiments.common.seed import set_seed
 from experiments.common.stateful_bdh import StatefulBDH
@@ -28,6 +28,7 @@ def main() -> None:
     p.add_argument("--seed", type=int, default=12345)
     p.add_argument("--initial-exposures", type=int, default=16)
     p.add_argument("--overwrite-exposures", type=str, default="0,1,2,4,8,16,32")
+    p.add_argument("--task", type=str, default="shakespeare_completion")
     args = p.parse_args()
 
     overwrite_list = [int(x) for x in args.overwrite_exposures.split(",") if x.strip()]
@@ -35,16 +36,18 @@ def main() -> None:
     device = torch.device("cuda" if torch.cuda.is_available() else "cpu")
     base, _, _ = load_checkpoint(args.checkpoint, device)
 
-    line_old = "X A 1\n"
-    line_new = "X A 7\n"
-    probe = "X A "
-    t_old, t_new = ord("1"), ord("7")
+    spec = TASKS[args.task]
+    line_old = spec["line_a"]
+    line_new = spec["line_b"]
+    probe = spec["probe"]
+    t_old, t_new = ord(spec["target_a"]), ord(spec["target_b"])
 
     run_dir = init_run(
         {
             "experiment": "interference",
             "seed": args.seed,
             "checkpoint": args.checkpoint,
+            "task": args.task,
             "initial_exposures": args.initial_exposures,
             "overwrite_exposures": overwrite_list,
             "state_capture": "summary",
@@ -91,7 +94,7 @@ def main() -> None:
     write_json(run_dir / "metrics.json", {"rows": rows})
     write_summary(
         run_dir,
-        f"# Interference\n\nInitial {args.initial_exposures}× `X A 1`, then overwrite with `X A 7`.\n\n"
+        f"# Interference\n\nTask `{args.task}`: {args.initial_exposures}× `{line_old.strip()}` then overwrite with `{line_new.strip()}`.\n\n"
         + "\n".join(f"- k={r['overwrite_exposures']}: P(old)={r['p_old']:.4f}, P(new)={r['p_new']:.4f}" for r in rows),
     )
     print(rows)

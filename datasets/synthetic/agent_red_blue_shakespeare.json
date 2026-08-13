@@ -1,0 +1,22 @@
+{
+  "name": "agent_red_blue_shakespeare",
+  "description": "Length-matched Shakespeare lives. Each line pair has equal UTF-8 length.",
+  "probe_suite": [
+    "my lo",
+    "To be or ",
+    "the "
+  ],
+  "red_history_lines": [
+    "my lord\n",
+    "To be or not to be,\n"
+  ],
+  "blue_history_lines": [
+    "my love\n",
+    "Friends, Romans, all\n"
+  ],
+  "targets": {
+    "my lo": {"red": "r", "blue": "v"},
+    "To be or ": {"red": "n", "blue": "F"}
+  },
+  "exposures_per_line": 8
+}

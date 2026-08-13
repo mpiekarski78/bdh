@@ -10,6 +10,7 @@ from experiments.common.metrics import (
 )
 from experiments.common.probes import (
     build_symbol_association_streams,
+    build_task_streams,
     decode_bytes,
     encode_bytes,
 )
@@ -22,6 +23,7 @@ __all__ = [
     "activation_divergence",
     "association_strength",
     "build_symbol_association_streams",
+    "build_task_streams",
     "clone_model",
     "collect_environment",
     "decode_bytes",

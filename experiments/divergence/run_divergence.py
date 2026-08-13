@@ -16,7 +16,7 @@ from analysis.plots import plot_multi, plot_xy
 from experiments.common.checkpoint import clone_model, load_checkpoint
 from experiments.common.hashing import hash_trainable_params
 from experiments.common.metrics import activation_divergence, association_strength, output_divergence
-from experiments.common.probes import build_symbol_association_streams, encode_bytes
+from experiments.common.probes import build_task_streams, encode_bytes
 from experiments.common.run_io import init_run, write_json, write_summary
 from experiments.common.seed import set_seed
 from experiments.common.stateful_bdh import StatefulBDH, rho_distance
@@ -33,24 +33,25 @@ def main() -> None:
     p.add_argument("--checkpoint", type=str, default=str(REPO_ROOT / "checkpoints" / "base.pt"))
     p.add_argument("--seed", type=int, default=12345)
     p.add_argument("--exposures", type=int, default=8)
+    p.add_argument("--task", type=str, default="shakespeare_completion")
     p.add_argument("--state-capture", choices=["none", "summary", "detailed"], default="detailed")
     args = p.parse_args()
 
     set_seed(args.seed, deterministic=True)
     device = torch.device("cuda" if torch.cuda.is_available() else "cpu")
     base, cfg, _ = load_checkpoint(args.checkpoint, device)
-    streams = build_symbol_association_streams(exposures=args.exposures, noise_seed=args.seed)
+    streams = build_task_streams(args.task, exposures=args.exposures, noise_seed=args.seed)
 
     run_dir = init_run(
         {
             "experiment": "divergence",
             "seed": args.seed,
             "checkpoint": args.checkpoint,
-            "experience_set": "symbol_association",
+            "experience_set": args.task,
             "probe_set": streams["probe"],
             "state_capture": args.state_capture,
             "exposures": args.exposures,
-            "streams": {k: streams[k] for k in ("target_a", "target_b", "history_bytes", "exposures")},
+            "streams": {k: streams[k] for k in ("task", "target_a", "target_b", "history_bytes", "exposures", "probe")},
         },
         prefix="divergence",
     )

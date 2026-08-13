@@ -6,11 +6,8 @@
 - torch: 2.13.0+cu130
 - cuda: 13.0
 - machine: aarch64
-- python: 3.12.3
 - commit: 2b0d7a45b058d4309c84a10e0768d541fe18bdc2
 - fork: https://github.com/mpiekarski78/bdh
-
-Hardware catalog and metric definitions: [`hardware_and_metrics.md`](hardware_and_metrics.md).
 
 ## Checkpoint
 
@@ -52,20 +49,20 @@ See [`docs/state_map.md`](state_map.md).
 ## Setup
 - same checkpoint / architecture / seed path
 - exposures: 8
-- probe: `X A `
-- targets: A→1  B→7
+- probe: `my lo`
+- targets: A→r  B→v
 
 ## Weight control
 - any_weights_changed: **False**
 
 ## Final A vs B
-- state L2: 58860.150390625
-- state cosine: 0.9320536446214833
-- output JS: 0.16532298922538757
-- P(target_a | A): 8.762310244492255e-06
-- P(target_a | B): 8.043244633881841e-06
-- P(target_b | B): 9.781876542547252e-06
-- active Jaccard: 0.7247760842754767
+- state L2: 114941.7890625
+- state cosine: 0.7387937395288162
+- output JS: 0.570887953042984
+- P(target_a | A): 0.04322982206940651
+- P(target_a | B): 0.010638287290930748
+- P(target_b | B): 0.6073445081710815
+- active Jaccard: 0.5891657424227126
 
 ## Same-experience control (A vs A2)
 - state L2: 0.0
@@ -75,8 +72,8 @@ See [`docs/state_map.md`](state_map.md).
 - JS after reset+same probe: 0.0
 
 ## Noise / neutral
-- A vs C state L2: 274983.1796875
-- A vs N state L2: 193238.47265625
+- A vs C state L2: 390455.48046875
+- A vs N state L2: 199909.34375
 
 
 ## 4. Activation divergence
@@ -91,12 +88,12 @@ See JS/KL in divergence and red-blue sections.
 
 # Exposure curve
 
-- k=1: P(1|A)=0.0000, P(7|B)=0.0000, JS=0.0249
-- k=2: P(1|A)=0.0000, P(7|B)=0.0000, JS=0.0914
-- k=4: P(1|A)=0.0000, P(7|B)=0.0000, JS=0.1114
-- k=8: P(1|A)=0.0000, P(7|B)=0.0000, JS=0.1653
-- k=16: P(1|A)=0.0000, P(7|B)=0.0000, JS=0.4015
-- k=32: P(1|A)=0.0000, P(7|B)=0.0000, JS=0.2360
+- k=1: P(1|A)=0.1571, P(7|B)=0.3699, JS=0.0400
+- k=2: P(1|A)=0.0244, P(7|B)=0.8528, JS=0.3693
+- k=4: P(1|A)=0.0010, P(7|B)=0.2585, JS=0.5039
+- k=8: P(1|A)=0.0432, P(7|B)=0.6073, JS=0.5709
+- k=16: P(1|A)=0.1329, P(7|B)=0.9228, JS=0.5747
+- k=32: P(1|A)=0.0514, P(7|B)=0.0683, JS=0.5642
 
 
 ## 7. Memory decay
@@ -105,40 +102,40 @@ See JS/KL in divergence and red-blue sections.
 
 After establishing A→1 with 16 exposures, insert distractors then probe.
 
-- d=0: P(target)=0.0000
-- d=1: P(target)=0.0000
-- d=5: P(target)=0.0000
-- d=10: P(target)=0.0000
-- d=50: P(target)=0.0000
+- d=0: P(target)=0.1329
+- d=1: P(target)=0.0785
+- d=5: P(target)=0.1825
+- d=10: P(target)=0.0024
+- d=50: P(target)=0.8772
 - d=100: P(target)=0.0000
-- d=500: P(target)=0.0000
+- d=500: P(target)=0.9950
 
 
 ## 8. Interference
 
 # Interference
 
-Initial 16× `X A 1`, then overwrite with `X A 7`.
+Task `shakespeare_completion`: 16× `my lord` then overwrite with `my love`.
 
-- k=0: P(old)=0.0000, P(new)=0.0000
-- k=1: P(old)=0.0000, P(new)=0.0000
-- k=2: P(old)=0.0000, P(new)=0.0000
-- k=4: P(old)=0.0000, P(new)=0.0000
-- k=8: P(old)=0.0000, P(new)=0.0000
-- k=16: P(old)=0.0000, P(new)=0.0000
-- k=32: P(old)=0.0000, P(new)=0.0000
+- k=0: P(old)=0.1329, P(new)=0.0237
+- k=1: P(old)=0.4083, P(new)=0.4243
+- k=2: P(old)=0.1109, P(new)=0.3238
+- k=4: P(old)=0.5436, P(new)=0.1611
+- k=8: P(old)=0.0141, P(new)=0.9496
+- k=16: P(old)=0.4631, P(new)=0.4927
+- k=32: P(old)=0.4220, P(new)=0.4600
 
 
 ## 9. State persistence
 
 # Persistence / restore
 
-- snapshot: `/opt/BDH_v1/runs/2026-08-13_persistence_002/state/S_A.pt`
+- snapshot: `/opt/BDH_v1/runs/2026-08-13_persistence_003/state/S_A.pt`
 - weights_unchanged: True
 - JS(before, after restore): 0.0
 - max abs logit diff: 0.0
-- P(target) before: 1.2228385912749218e-06
-- P(target) after: 1.2228385912749218e-06
+- P(target) before: 0.13286076486110687
+- P(target) after: 0.13286076486110687
 
 
 ## 10. Conclusions
@@ -158,17 +155,17 @@ same probe: YES
 different experience: YES
 weights_changed: false
 
-dynamic-state divergence (L2): 142557.546875
-dynamic-state cosine: 0.8849357534771527
-activation divergence (Jaccard): 0.6286563134935038
-output-distribution divergence (JS): 0.26126642525196075
+dynamic-state divergence (L2): 315164.48046875
+dynamic-state cosine: 0.4480532264342529
+activation divergence (Jaccard): 0.4268108914308582
+output-distribution divergence (JS): 0.006478470750153065
 reset_ablates_effect: YES
 JS after reset: 0.0
 ```
 
-## Primary probe `X A `
-- Red P(target_red): 7.74785894464003e-06
-- Blue P(target_blue): 8.558195077057462e-06
+## Primary probe `my lo`
+- Red P(target_red): 0.8751946687698364
+- Blue P(target_blue): 0.06353792548179626
 
 
 ### Thresholds used (predeclared)

@@ -14,7 +14,7 @@ sys.path.insert(0, str(REPO_ROOT))
 from experiments.common.checkpoint import clone_model, load_checkpoint
 from experiments.common.hashing import hash_trainable_params
 from experiments.common.metrics import association_strength, output_divergence
-from experiments.common.probes import build_symbol_association_streams, encode_bytes
+from experiments.common.probes import build_task_streams, encode_bytes
 from experiments.common.run_io import init_run, write_json, write_summary
 from experiments.common.seed import set_seed
 from experiments.common.stateful_bdh import StatefulBDH, rho_distance, snapshots_allclose
@@ -25,18 +25,20 @@ def main() -> None:
     p.add_argument("--checkpoint", type=str, default=str(REPO_ROOT / "checkpoints" / "base.pt"))
     p.add_argument("--seed", type=int, default=12345)
     p.add_argument("--exposures", type=int, default=16)
+    p.add_argument("--task", type=str, default="shakespeare_completion")
     args = p.parse_args()
 
     set_seed(args.seed, deterministic=True)
     device = torch.device("cuda" if torch.cuda.is_available() else "cpu")
     base, _, _ = load_checkpoint(args.checkpoint, device)
-    streams = build_symbol_association_streams(exposures=args.exposures)
+    streams = build_task_streams(args.task, exposures=args.exposures)
 
     run_dir = init_run(
         {
             "experiment": "persistence_restore",
             "seed": args.seed,
             "checkpoint": args.checkpoint,
+            "task": args.task,
             "exposures": args.exposures,
         },
         prefix="persistence",

@@ -36,7 +36,7 @@ python tests/test_equivalence.py
 
 # Phase 4–5
 python -m experiments.determinism.run_determinism --checkpoint checkpoints/base.pt
-python -m experiments.divergence.run_divergence --checkpoint checkpoints/base.pt --exposures 8
+python -m experiments.divergence.run_divergence --checkpoint checkpoints/base.pt --task shakespeare_completion
 python -m experiments.exposure.run_exposure_curve --checkpoint checkpoints/base.pt
 python -m experiments.decay.run_decay --checkpoint checkpoints/base.pt --exposures 16
 python -m experiments.interference.run_interference --checkpoint checkpoints/base.pt
@@ -44,6 +44,9 @@ python -m experiments.persistence.run_restore --checkpoint checkpoints/base.pt
 python -m experiments.report.run_red_blue --checkpoint checkpoints/base.pt
 python -m experiments.report.run_report
 ```
+
+Default `--task` is `shakespeare_completion`. Pass `--task symbol_association` to reproduce the original out-of-distribution byte protocol.
+
 
 ## Controls (required)
 

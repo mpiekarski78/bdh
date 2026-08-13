@@ -15,7 +15,7 @@ sys.path.insert(0, str(REPO_ROOT))
 from experiments.common.checkpoint import clone_model, load_checkpoint
 from experiments.common.hashing import hash_trainable_params
 from experiments.common.metrics import activation_divergence, association_strength, output_divergence
-from experiments.common.probes import encode_bytes
+from experiments.common.probes import encode_bytes, pad_to_equal_bytes
 from experiments.common.run_io import init_run, write_json, write_summary
 from experiments.common.seed import set_seed
 from experiments.common.stateful_bdh import StatefulBDH, rho_distance
@@ -29,6 +29,17 @@ def build_history(lines: list[str], exposures_per_line: int) -> str:
     return "".join(out)
 
 
+def _length_matched_lives(red_lines: list[str], blue_lines: list[str]) -> tuple[list[str], list[str]]:
+    if len(red_lines) != len(blue_lines):
+        raise ValueError("red and blue history line lists must have the same length")
+    red_out, blue_out = [], []
+    for r, b in zip(red_lines, blue_lines):
+        rp, bp = pad_to_equal_bytes(r, b)
+        red_out.append(rp)
+        blue_out.append(bp)
+    return red_out, blue_out
+
+
 def main() -> None:
     p = argparse.ArgumentParser()
     p.add_argument("--checkpoint", type=str, default=str(REPO_ROOT / "checkpoints" / "base.pt"))
@@ -36,7 +47,7 @@ def main() -> None:
     p.add_argument(
         "--dataset",
         type=str,
-        default=str(REPO_ROOT / "datasets" / "synthetic" / "agent_red_blue.json"),
+        default=str(REPO_ROOT / "datasets" / "synthetic" / "agent_red_blue_shakespeare.json"),
     )
     p.add_argument("--exposures-per-line", type=int, default=None)
     args = p.parse_args()
@@ -48,8 +59,9 @@ def main() -> None:
     device = torch.device("cuda" if torch.cuda.is_available() else "cpu")
     base, _, _ = load_checkpoint(args.checkpoint, device)
 
-    red_hist = build_history(spec["red_history_lines"], epl)
-    blue_hist = build_history(spec["blue_history_lines"], epl)
+    red_lines, blue_lines = _length_matched_lives(spec["red_history_lines"], spec["blue_history_lines"])
+    red_hist = build_history(red_lines, epl)
+    blue_hist = build_history(blue_lines, epl)
     assert len(red_hist.encode("utf-8")) == len(blue_hist.encode("utf-8"))
 
     run_dir = init_run(

@@ -73,16 +73,33 @@ See `experiments/report/run_report.py` and [`experiment_protocol.md`](experiment
 
 ## Headline numbers (full checkpoint)
 
-Agent Red vs Agent Blue, identical weights, different synthetic histories, shared probe `X A `:
+### v1 — `symbol_association` (`X A ` → 1 vs 7)
+
+Out of distribution for Tiny Shakespeare. Output distributions diverged, but P(target bytes) stayed ~1e-5.
 
 | Quantity | Value |
 |----------|-------|
 | Weights changed | false |
-| Dynamic-state L2 | ≈ 1.43×10⁵ |
-| Dynamic-state cosine | ≈ 0.885 |
-| Activation Jaccard | ≈ 0.629 |
-| Output JS divergence | ≈ 0.261 |
+| Dynamic-state L2 (Red/Blue) | ≈ 1.43×10⁵ |
+| Output JS | ≈ 0.261 |
 | JS after ρ reset | 0.0 |
-| Snapshot restore | exact (logit diff 0) |
+
+### v2 — `shakespeare_completion` (`my lo` → r vs v)
+
+In-distribution. Dedicated A vs B (8× `my lord` vs 8× `my love`):
+
+| Quantity | Value |
+|----------|-------|
+| Weights changed | false |
+| State L2 | ≈ 1.15×10⁵ |
+| State cosine | ≈ 0.74 |
+| Output JS | ≈ 0.571 |
+| P(`v` \| B) | ≈ 0.61 |
+| P(`r` \| A) | ≈ 0.043 (pretrained prior for “lord” is already high; extra `my lord` does not simply raise it) |
+| Same-experience L2 / JS | 0 |
+| JS after ρ reset | 0.0 |
+| Restore | exact |
+
+Red/Blue mixed lives (lord/love **and** Hamlet/Friends) dilute the specific `my lo` probe (JS ≈ 0.006) while still producing large ρ divergence (L2 ≈ 3.15×10⁵, cosine ≈ 0.45). Decay vs further Shakespeare context is **non-monotonic** — not a smooth forgetting curve.
 
 Full narrative: [`experiment_report.md`](experiment_report.md).

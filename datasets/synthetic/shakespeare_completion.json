@@ -1,0 +1,9 @@
+{
+  "name": "shakespeare_completion",
+  "description": "In-distribution byte completions from Tiny Shakespeare. Histories are length-matched. Probe 'my lo' continues as lord (r) vs love (v).",
+  "line_a": "my lord\n",
+  "line_b": "my love\n",
+  "probe": "my lo",
+  "target_a": "r",
+  "target_b": "v"
+}

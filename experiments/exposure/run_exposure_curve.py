@@ -16,7 +16,7 @@ from analysis.plots import plot_multi
 from experiments.common.checkpoint import clone_model, load_checkpoint
 from experiments.common.hashing import hash_trainable_params
 from experiments.common.metrics import association_strength, output_divergence
-from experiments.common.probes import build_symbol_association_streams, encode_bytes
+from experiments.common.probes import build_task_streams, encode_bytes
 from experiments.common.run_io import init_run, write_json, write_summary
 from experiments.common.seed import set_seed
 from experiments.common.stateful_bdh import StatefulBDH, rho_distance
@@ -27,6 +27,7 @@ def main() -> None:
     p.add_argument("--checkpoint", type=str, default=str(REPO_ROOT / "checkpoints" / "base.pt"))
     p.add_argument("--seed", type=int, default=12345)
     p.add_argument("--exposures", type=str, default="1,2,4,8,16,32")
+    p.add_argument("--task", type=str, default="shakespeare_completion")
     args = p.parse_args()
 
     exposure_list = [int(x) for x in args.exposures.split(",") if x.strip()]
@@ -39,6 +40,7 @@ def main() -> None:
             "experiment": "exposure_curve",
             "seed": args.seed,
             "checkpoint": args.checkpoint,
+            "task": args.task,
             "exposures": exposure_list,
             "state_capture": "summary",
         },
@@ -47,7 +49,7 @@ def main() -> None:
 
     rows = []
     for k in exposure_list:
-        streams = build_symbol_association_streams(exposures=k, noise_seed=args.seed)
+        streams = build_task_streams(args.task, exposures=k, noise_seed=args.seed)
         a = StatefulBDH(clone_model(base), capture_level="summary")
         b = StatefulBDH(clone_model(base), capture_level="summary")
         c = StatefulBDH(clone_model(base), capture_level="summary")
