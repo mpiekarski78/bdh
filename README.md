@@ -76,11 +76,43 @@ Read more: [Post-transformers: Sudoku Bench](https://pathway.com/research/beyond
 ## Installation and Training
 
 ```bash
-# install dependencies
-pip install -r requirements.txt
+# install dependencies (on DGX Spark / CUDA 13 aarch64, prefer cu130 wheels)
+python3 -m venv .venv && source .venv/bin/activate
+pip install torch --index-url https://download.pytorch.org/whl/cu130
+pip install numpy requests matplotlib
 
-# train BDH on a toy dataset
+# train BDH on a toy dataset (upstream demo)
 python train.py
+
+# reproducible baseline with checkpoint + run logging
+python -m experiments.baseline.run_baseline --checkpoint checkpoints/base.pt
+```
+
+## Experience-Driven State Experiments
+
+This fork adds a research harness (does **not** modify `bdh.py`) to test whether different experience histories produce persistent, measurable divergence in BDH’s inference-time linear-attention state ρ while slow weights stay fixed.
+
+**Reported classification: Category B** — short-term adaptive memory (experience changes subsequent processing; effect is cleared by resetting dynamic state).
+
+### Hardware (reported run)
+
+- NVIDIA **GB10**, `aarch64`, CUDA **13.0**, PyTorch **2.13.0+cu130**, Python 3.12.3
+- Baseline train: batch **32**, block **512**, **3000** iters, bf16 → loss **5.65 → 0.11**
+
+### Metrics
+
+- **State:** L1/L2, cosine, relative norm on per-layer ρ
+- **Activations:** sparsity stats + active-index Jaccard
+- **Outputs:** KL, Jensen–Shannon, top-k overlap, rank correlation, confidence
+- **Controls:** weight SHA256, ρ reset, same-experience twins, length-matched noise
+
+Details: [`docs/hardware_and_metrics.md`](docs/hardware_and_metrics.md) · protocol: [`docs/experiment_protocol.md`](docs/experiment_protocol.md) · report: [`docs/experiment_report.md`](docs/experiment_report.md) · state map: [`docs/state_map.md`](docs/state_map.md)
+
+```bash
+python tests/test_equivalence.py
+python -m experiments.divergence.run_divergence --checkpoint checkpoints/base.pt
+python -m experiments.report.run_red_blue --checkpoint checkpoints/base.pt
+python -m experiments.report.run_report
 ```
 
 <!--For visualization and interpretability analysis, explore the example notebooks in `notebooks/`.-->

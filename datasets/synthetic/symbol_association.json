@@ -1,0 +1,11 @@
+{
+  "name": "symbol_association_default",
+  "symbol": "X",
+  "context": "A",
+  "target_a": "1",
+  "target_b": "7",
+  "line_a": "X A 1\n",
+  "line_b": "X A 7\n",
+  "probe": "X A ",
+  "description": "Synthetic byte-level symbol association used by divergence/exposure/decay/interference experiments."
+}

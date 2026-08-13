@@ -1,3 +1,7 @@
+# Install CUDA build on DGX Spark / aarch64+CUDA 13, e.g.:
+#   pip install torch --index-url https://download.pytorch.org/whl/cu130
+#   pip install numpy requests matplotlib
 torch
 numpy
 requests
+matplotlib

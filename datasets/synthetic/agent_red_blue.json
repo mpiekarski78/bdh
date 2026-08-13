@@ -1,0 +1,24 @@
+{
+  "name": "agent_red_blue",
+  "probe_suite": [
+    "X A ",
+    "Y B ",
+    "X B ",
+    "Z A "
+  ],
+  "red_history_lines": [
+    "X A 1\n",
+    "X A 1\n",
+    "Y B 3\n"
+  ],
+  "blue_history_lines": [
+    "X A 7\n",
+    "X A 7\n",
+    "Y B 9\n"
+  ],
+  "targets": {
+    "X A ": {"red": "1", "blue": "7"},
+    "Y B ": {"red": "3", "blue": "9"}
+  },
+  "exposures_per_line": 8
+}
