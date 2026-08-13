@@ -32,6 +32,7 @@ Interpretation: experience modifies inference-time state and subsequent processi
 | 3 Instrumentation | done | `StatefulBDH` ρ snapshot/reset/load |
 | 4 Divergence suite | done | v1 synthetic bytes; v2 Shakespeare completions |
 | 5 Red / Blue headline | done | Same weights, different lives |
+| 5b Prior-relative association | done | B can raise P(v) vs prior; A does not raise P(r); 1 distractor byte can wipe it |
 | 6 Cross-process persistence | partial | In-process restore is exact; longer-lived association still unproven |
 | 7 Explicit memory store | not started | Out of scope until Category C/D |
 

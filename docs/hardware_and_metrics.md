@@ -102,4 +102,18 @@ In-distribution. Dedicated A vs B (8× `my lord` vs 8× `my love`):
 
 Red/Blue mixed lives (lord/love **and** Hamlet/Friends) dilute the specific `my lo` probe (JS ≈ 0.006) while still producing large ρ divergence (L2 ≈ 3.15×10⁵, cosine ≈ 0.45). Decay vs further Shakespeare context is **non-monotonic** — not a smooth forgetting curve.
 
+### v3 — prior-relative (`experiments.prior.run_prior`)
+
+Empty prior on `my lo`: P(`r`)=0.636, P(`v`)=0.181 (model already prefers “lord”).
+
+| k | ΔP(v) B vs prior | ΔP(r) A vs prior | JS(B, prior) |
+|---|------------------|------------------|--------------|
+| 1 | +0.19 | −0.48 | 0.16 |
+| 2 | +0.67 | −0.61 | 0.33 |
+| 8 | +0.43 | −0.59 | 0.40 |
+| 16 | +0.74 | −0.50 | 0.38 |
+| 32 | −0.11 | −0.58 | 0.08 |
+
+Clean-filler decay after 8× `my love`: 1 extra byte can collapse P(`v`). Reset after B vs empty prior JS=0.
+
 Full narrative: [`experiment_report.md`](experiment_report.md).

@@ -96,6 +96,32 @@ See JS/KL in divergence and red-blue sections.
 - k=32: P(1|A)=0.0514, P(7|B)=0.0683, JS=0.5642
 
 
+## 6b. Prior-relative association
+
+# Prior-relative association
+
+Probe `my lo` → r=`r` vs v=`v`
+Empty prior: P(r)=0.6360, P(v)=0.1809, margin r-v=1.257
+Reset after 8× B vs empty prior JS=0
+
+## Exposure vs prior
+- k=1: ΔP(v) B-prior=0.1890, ΔP(r) A-prior=-0.4789, JS(B,prior)=0.1607, JS(A,matched)=0.2781
+- k=2: ΔP(v) B-prior=0.6719, ΔP(r) A-prior=-0.6116, JS(B,prior)=0.3260, JS(A,matched)=0.5169
+- k=4: ΔP(v) B-prior=0.0776, ΔP(r) A-prior=-0.6350, JS(B,prior)=0.4705, JS(A,matched)=0.5081
+- k=8: ΔP(v) B-prior=0.4265, ΔP(r) A-prior=-0.5928, JS(B,prior)=0.3953, JS(A,matched)=0.3987
+- k=16: ΔP(v) B-prior=0.7419, ΔP(r) A-prior=-0.5032, JS(B,prior)=0.3826, JS(A,matched)=0.5189
+- k=32: ΔP(v) B-prior=-0.1126, ΔP(r) A-prior=-0.5846, JS(B,prior)=0.0775, JS(A,matched)=0.6719
+
+## Clean-filler decay after B
+- d=0: P(v)=0.6073, ΔP(v) vs prior=0.4265
+- d=1: P(v)=0.0000, ΔP(v) vs prior=-0.1808
+- d=5: P(v)=0.0004, ΔP(v) vs prior=-0.1804
+- d=10: P(v)=0.6920, ΔP(v) vs prior=0.5111
+- d=50: P(v)=0.0000, ΔP(v) vs prior=-0.1809
+- d=100: P(v)=0.4070, ΔP(v) vs prior=0.2261
+- d=500: P(v)=0.0057, ΔP(v) vs prior=-0.1752
+
+
 ## 7. Memory decay
 
 # Memory decay

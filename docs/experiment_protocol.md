@@ -41,7 +41,7 @@ python -m experiments.exposure.run_exposure_curve --checkpoint checkpoints/base.
 python -m experiments.decay.run_decay --checkpoint checkpoints/base.pt --exposures 16
 python -m experiments.interference.run_interference --checkpoint checkpoints/base.pt
 python -m experiments.persistence.run_restore --checkpoint checkpoints/base.pt
-python -m experiments.report.run_red_blue --checkpoint checkpoints/base.pt
+python -m experiments.prior.run_prior --checkpoint checkpoints/base.pt
 python -m experiments.report.run_report
 ```
 

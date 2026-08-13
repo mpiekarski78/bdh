@@ -93,6 +93,23 @@ def length_matched_shakespeare(length: int, seed: int = 0) -> str:
     return (filler * (length // len(filler) + 2))[:length].decode("latin-1")
 
 
+CLEAN_FILLER = "Enter two servants with torches.\n"
+
+
+def length_matched_filler(length: int, filler: str = CLEAN_FILLER) -> str:
+    """Repeat a fixed line to exact byte length; must not contain lord/love/my lo."""
+    banned = (b"lord", b"love", b"my lo", b"Lord", b"Love")
+    raw = filler.encode("latin-1")
+    if any(tok in raw for tok in banned):
+        raise ValueError("filler contains a banned association substring")
+    if length <= 0:
+        return ""
+    tiled = (raw * (length // len(raw) + 2))[:length]
+    if any(tok in tiled for tok in banned):
+        raise ValueError("tiled filler contains a banned substring")
+    return tiled.decode("latin-1")
+
+
 TASKS: dict[str, dict[str, str]] = {
     # Original synthetic alphabet (out of distribution for Shakespeare bytes).
     "symbol_association": {

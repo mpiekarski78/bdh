@@ -105,6 +105,7 @@ def main() -> None:
         "interference": "interference",
         "persistence": "persistence",
         "redblue": "redblue",
+        "prior": "prior",
     }
     loaded: dict[str, Any] = {}
     summaries: dict[str, str] = {}
@@ -173,6 +174,10 @@ def main() -> None:
         "## 6. Exposure-strength curve",
         "",
         summaries.get("exposure") or "_not run_",
+        "",
+        "## 6b. Prior-relative association",
+        "",
+        summaries.get("prior") or "_not run_",
         "",
         "## 7. Memory decay",
         "",
