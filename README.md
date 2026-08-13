@@ -1,13 +1,96 @@
-# BDH (Dragon Hatchling)
+# BDH experience-driven state experiments
 
-## **Bridging the Gap Between Transformers and the Brain**
+> **Fork** of [`pathwaycom/bdh`](https://github.com/pathwaycom/bdh) (Pathway’s public BDH-GPU baseline).  
+> Upstream paper: [arXiv:2509.26507](https://doi.org/10.48550/arXiv.2509.26507).  
+> This is **not** the official Pathway repository.
+
+## What this fork adds
+
+A measurement harness around **unmodified** upstream `bdh.py` / `train.py` to answer:
+
+> Can two identical BDH models (same weights, same initial dynamic state) diverge internally and behaviorally after different experience histories **without** changing slow learned weights?
+
+**Result (reported run): Category B — short-term adaptive memory.**
+
+| Check | Outcome |
+|-------|---------|
+| Same architecture / same checkpoint | yes |
+| Trainable weights after experience | unchanged (SHA256) |
+| Dynamic state ρ after different histories | diverges (L2 ≫ 0) |
+| Same probe, different output distributions | yes (JS ≈ 0.26) |
+| Reset ρ then re-probe | divergence disappears (JS → 0) |
+| Snapshot → restore | exact match |
+
+Interpretation: experience modifies inference-time state and subsequent processing, but the effect behaves like working memory (cleared by reset), not a durable long-term associative store.
+
+### Layout
+
+```text
+bdh.py, train.py          # upstream, unmodified
+experiments/              # harness + CLI runners
+docs/                     # state map, protocol, report, hardware/metrics
+datasets/synthetic/       # byte-level probe histories
+tests/                    # recurrent ρ ≡ full-sequence attention
+```
+
+### Hardware (reported run)
+
+| Item | Value |
+|------|-------|
+| GPU | NVIDIA GB10 (`aarch64`) |
+| CUDA / PyTorch | 13.0 / 2.13.0+cu130 |
+| Python | 3.12.3 |
+| Baseline train | batch 32, block 512, 3000 iters, bf16 |
+| Train loss | 5.65 → 0.11 (next-byte CE on Tiny Shakespeare) |
+
+### Metrics
+
+- **State (ρ):** L1, L2, cosine, relative norm  
+- **Activations:** mean/std/max/L2/sparsity; Jaccard of top-k active indices  
+- **Outputs:** KL, Jensen–Shannon, top-k overlap, Spearman ranks, confidence  
+- **Controls:** weight hash, ρ reset, same-experience twins, length-matched noise/neutral
+
+Full write-up:
+
+- [`docs/hardware_and_metrics.md`](docs/hardware_and_metrics.md)
+- [`docs/experiment_report.md`](docs/experiment_report.md)
+- [`docs/experiment_protocol.md`](docs/experiment_protocol.md)
+- [`docs/state_map.md`](docs/state_map.md)
+- [`docs/FORK.md`](docs/FORK.md)
+
+### Quick start (this fork)
+
+```bash
+python3 -m venv .venv && source .venv/bin/activate
+pip install torch --index-url https://download.pytorch.org/whl/cu130
+pip install numpy requests matplotlib
+
+# train + save checkpoint (logged run dir under runs/)
+python -m experiments.baseline.run_baseline --checkpoint checkpoints/base.pt
+
+python tests/test_equivalence.py
+python -m experiments.divergence.run_divergence --checkpoint checkpoints/base.pt
+python -m experiments.report.run_red_blue --checkpoint checkpoints/base.pt
+python -m experiments.report.run_report
+```
+
+Upstream’s original demo remains available as `python train.py` (does not save a checkpoint by itself).
+
+---
+
+# Upstream: Pathway BDH (Dragon Hatchling)
+
+Content below is from the upstream project for context and attribution.  
+Official repo: [github.com/pathwaycom/bdh](https://github.com/pathwaycom/bdh) · [Pathway](https://pathway.com)
+
+## Bridging the Gap Between Transformers and the Brain
 
 **BDH (Dragon Hatchling)** is a biologically inspired large language model architecture that connects principles of deep learning with the foundations of neuroscience. Developed by researchers at [Pathway](https://pathway.com), BDH provides a theoretical and practical framework for understanding the emergence of reasoning and generalization in artificial systems.
 
-This repository contains the official implementation from the paper:
-> *A. Kosowski, P. Uznański, J. Chorowski, Z. Stamirowska, M. Bartoszkiewicz.*
-> [_The Dragon Hatchling: The Missing Link between the Transformer and Models of the Brain_](https://doi.org/10.48550/arXiv.2509.26507), arXiv (2025).
+Paper:
 
+> *A. Kosowski, P. Uznański, J. Chorowski, Z. Stamirowska, M. Bartoszkiewicz.*  
+> [_The Dragon Hatchling: The Missing Link between the Transformer and Models of the Brain_](https://doi.org/10.48550/arXiv.2509.26507), arXiv (2025).
 
 ## Overview
 
@@ -21,18 +104,11 @@ BDH represents a **scale-free, locally interacting network of neurons** capable 
 - **GPU-friendly state-space formulation** for efficient implementation
 - **Interpretable activations** that are sparse and positive
 
-BDH formalizes a bridge between **neural computation and machine-based language understanding**. It shows how **macro reasoning behavior** in large AI models emerges from **micro-level neuron dynamics**, guided by principles of graph theory and local computation.
-
 Empirically, BDH matches **GPT-2–scale Transformers** across language and translation tasks at equivalent parameter scales (10M–1B).
-
-
-***
 
 ## Architecture
 
 <img src="figs/architecture.png" width="600"/>
-
-***
 
 ## Relation to Transformers
 
@@ -40,103 +116,35 @@ Empirically, BDH matches **GPT-2–scale Transformers** across language and tran
 
 BDH and the Transformer share attention-inspired computation; however, BDH’s graph-based architecture makes its attention **emerge naturally from neuron-level interactions**, reflecting attention as seen in biological systems.
 
-***
-
 ## Scaling Laws
 
 <img src="figs/bdh_scaling.png" width="600"/>
 
 BDH follows **Transformer-like scaling laws**, maintaining parameter efficiency while achieving interpretability at any scale.
 
-***
+## Sudoku Benchmark (Pathway)
 
-## Latest research update: Sudoku Benchmark
-
-Note: The Sudoku Extreme result refers to Pathway’s internal BDH implementation, not to the current open-source repository. This repository contains the implementation of the baseline variant as described in our [public paper](https://arxiv.org/abs/2509.26507) and does not reproduce the 97.4% benchmark result out of the box. See the dedicated Extreme Sudoku research blog post for additional benchmark context and the reported results.
-
-On Sudoku Extreme, BDH reaches 97.4% accuracy across roughly 250,000 difficult puzzles, without chain-of-thought, solution backtracking, or external tool use, while leading LLMs struggle to perform on the benchmark at all.
-
-Language is not enough for intelligence. Transformers process information token by token with limited internal state, which makes search-heavy, non-linguistic reasoning tasks like Sudoku awkward. BDH uses a larger latent reasoning space with intrinsic memory that supports learning and adaptation during use.
-
-We believe that the future of AI will belong to systems that can reason natively across domains, that can hold multiple possibilities in a rich latent space, and that can converge on solutions without needing to verbalize every step. BDH is our answer to that challenge. It is designed to be a universal reasoning system that can speak our language without being trapped inside it. And yes, it solves Sudoku.
-
-Read more: [Post-transformers: Sudoku Bench](https://pathway.com/research/beyond-transformers-sudoku-bench)
-
-### Performance Comparison
+Note: The Sudoku Extreme result refers to Pathway’s **internal** BDH implementation, not to the current open-source baseline in this repository. See Pathway’s [Sudoku bench post](https://pathway.com/research/beyond-transformers-sudoku-bench).
 
 | Model | Sudoku Extreme Accuracy | Relative Cost |
 |------|------------------------|--------------|
-| Pathway BDH | 97.4% | 10× lower, No chain-of-thought |
+| Pathway BDH (internal) | 97.4% | 10× lower, no chain-of-thought |
 | Leading LLMs (O3-mini, DeepSeek R1, Claude 3.7 8K) | ~0% | High (chain-of-thought) |
 
-*Table 1: Performance comparison on extreme Sudoku benchmarks (~250,000 difficult puzzles).*  
-*Source: Pathway internal data and https://arxiv.org/pdf/2506.21734 for the Leading LLMs’ accuracy score. Pathway’s approach reflects top-1 accuracy and does not rely on chain-of-thought nor solution backtracking.*
-
-
-## Installation and Training
+## Upstream install / train
 
 ```bash
-# install dependencies (on DGX Spark / CUDA 13 aarch64, prefer cu130 wheels)
-python3 -m venv .venv && source .venv/bin/activate
-pip install torch --index-url https://download.pytorch.org/whl/cu130
-pip install numpy requests matplotlib
-
-# train BDH on a toy dataset (upstream demo)
+pip install -r requirements.txt
 python train.py
-
-# reproducible baseline with checkpoint + run logging
-python -m experiments.baseline.run_baseline --checkpoint checkpoints/base.pt
 ```
 
-## Experience-Driven State Experiments
+## Learn and discuss (upstream)
 
-This fork adds a research harness (does **not** modify `bdh.py`) to test whether different experience histories produce persistent, measurable divergence in BDH’s inference-time linear-attention state ρ while slow weights stay fixed.
+- [SuperDataScience podcast](https://www.youtube.com/watch?v=mfV44-mtg7c) with Adrian Kosowski  
+- Coverage: [Forbes](https://www.forbes.com/sites/victordey/2025/10/08/can-ai-learn-and-evolve-like-a-brain-pathways-bold-research-thinks-so/), [Semafor](https://www.semafor.com/article/10/01/2025/new-ai-research-claims-to-be-getting-closer-to-modeling-human-brain), and others  
+- Paper hubs: [Hugging Face](https://huggingface.co/papers/2509.26507), [Alphaxiv](https://alphaxiv.org/abs/2509.26507), [EmergentMind](https://emergentmind.com/papers/2509.26507)
 
-**Reported classification: Category B** — short-term adaptive memory (experience changes subsequent processing; effect is cleared by resetting dynamic state).
-
-### Hardware (reported run)
-
-- NVIDIA **GB10**, `aarch64`, CUDA **13.0**, PyTorch **2.13.0+cu130**, Python 3.12.3
-- Baseline train: batch **32**, block **512**, **3000** iters, bf16 → loss **5.65 → 0.11**
-
-### Metrics
-
-- **State:** L1/L2, cosine, relative norm on per-layer ρ
-- **Activations:** sparsity stats + active-index Jaccard
-- **Outputs:** KL, Jensen–Shannon, top-k overlap, rank correlation, confidence
-- **Controls:** weight SHA256, ρ reset, same-experience twins, length-matched noise
-
-Details: [`docs/hardware_and_metrics.md`](docs/hardware_and_metrics.md) · protocol: [`docs/experiment_protocol.md`](docs/experiment_protocol.md) · report: [`docs/experiment_report.md`](docs/experiment_report.md) · state map: [`docs/state_map.md`](docs/state_map.md)
-
-```bash
-python tests/test_equivalence.py
-python -m experiments.divergence.run_divergence --checkpoint checkpoints/base.pt
-python -m experiments.report.run_red_blue --checkpoint checkpoints/base.pt
-python -m experiments.report.run_report
-```
-
-<!--For visualization and interpretability analysis, explore the example notebooks in `notebooks/`.-->
-
-
-
-## Learn and Discuss
-
-- Watch the *SuperDataScience podcast* [▶️ *Dragon Hatchling: The Missing Link Between Transformers and the Brain*](https://www.youtube.com/watch?v=mfV44-mtg7c) (72 min.) featuring Adrian Kosowski in conversation with Jon Krohn, unpacking BDH’s neuron-level architecture and sparse reasoning dynamics.
-
-- Read about BDH in
-[*Forbes*](https://www.forbes.com/sites/victordey/2025/10/08/can-ai-learn-and-evolve-like-a-brain-pathways-bold-research-thinks-so/),
-[*Semafor*](https://www.semafor.com/article/10/01/2025/new-ai-research-claims-to-be-getting-closer-to-modeling-human-brain),
-[*The Turing Post*](https://www.turingpost.com/p/fod-121-300-million-to-start-a-big-promise-for-science#the-freshest-research-papers-catego),
-[*Quantum Zeitgeist*](https://quantumzeitgeist.com/palo-alto-ai-firm-pathway-unveils-post-transformer-architecture-for-autonomous-ai/),
-[*Golem*](https://www.golem.de/news/neue-ki-architektur-was-ist-baby-dragon-hatchling-2510-201047-2.html),
-and elsewhere in the media.
-
-- Discuss and share the BDH paper on:
-[*Hugging Face Papers*](https://huggingface.co/papers/2509.26507), 
-[*Alphaxiv*](https://alphaxiv.org/abs/2509.26507),
-and [*EmergentMind*](https://emergentmind.com/papers/2509.26507).
-
-## Community Projects
+## Community ports (upstream list)
 
 - [adamskrodzki/bdh](https://github.com/adamskrodzki/bdh): dynamic vocabulary, stateful attention
 - [mosure/burn_dragon_hatchling](https://github.com/mosure/burn_dragon_hatchling): Burn port
@@ -144,7 +152,6 @@ and [*EmergentMind*](https://emergentmind.com/papers/2509.26507).
 - [Git-Faisal/bdh](https://github.com/Git-Faisal/bdh)
 - [GrahLnn/bdh](https://github.com/GrahLnn/bdh)
 
-## Acknowledgements
-We thank Andrej Karpathy for the [nanoGPT](https://github.com/karpathy/nanoGPT/) code and the tiny Shapespeare dataset used in this demonstration.
+## Acknowledgements (upstream)
 
-BDH research stands at the intersection of **AI architecture**, **biological learning models**, and **theoretical computer science**—an effort to map the *equations of reasoning* between artificial and biological intelligence.
+Upstream thanks Andrej Karpathy for [nanoGPT](https://github.com/karpathy/nanoGPT/) and the tiny Shakespeare dataset used in the demo.
