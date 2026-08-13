@@ -60,7 +60,35 @@ def test_snapshot_roundtrip() -> None:
     assert torch.allclose(logits1, logits2, atol=1e-5)
 
 
+def test_split_history_probe_matches_concat(atol: float = 2e-4) -> None:
+    """Experience then probe must match one concatenated forward (the experiment path)."""
+    set_seed(2, deterministic=True)
+    device = torch.device("cuda" if torch.cuda.is_available() else "cpu")
+    cfg = bdh.BDHConfig(
+        n_layer=2,
+        n_embd=64,
+        n_head=4,
+        mlp_internal_dim_multiplier=32,
+        dropout=0.0,
+        vocab_size=256,
+    )
+    model = bdh.BDH(cfg).to(device).eval()
+    hist = torch.randint(0, 256, (1, 16), device=device)
+    probe = torch.randint(0, 256, (1, 5), device=device)
+    concat = torch.cat([hist, probe], dim=1)
+    with torch.no_grad():
+        full, _ = model(concat)
+    w = StatefulBDH(model)
+    w.reset_dynamic_state(1)
+    w.step(hist)
+    split = w.step(probe)
+    max_diff = float((full[:, 16:] - split).abs().max().item())
+    print(f"split_vs_concat max_diff={max_diff:.6g}")
+    assert max_diff < atol, f"split history/probe mismatch: {max_diff}"
+
+
 if __name__ == "__main__":
     test_recurrent_matches_full()
     test_snapshot_roundtrip()
+    test_split_history_probe_matches_concat()
     print("OK")

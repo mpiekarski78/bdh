@@ -38,8 +38,13 @@ def classify(metrics_bundle: dict[str, Any]) -> tuple[str, str]:
     redblue = metrics_bundle.get("redblue") or {}
 
     pairwise = (div.get("pairwise") or {}).get("A_vs_B") or {}
-    state_l2 = pairwise.get("state_l2") or (redblue.get("headline") or {}).get("dynamic_state_divergence_l2") or 0.0
-    js = pairwise.get("js") or (redblue.get("headline") or {}).get("output_distribution_js") or 0.0
+    rb_h = (redblue.get("headline") or {})
+    state_l2 = pairwise.get("state_l2")
+    if state_l2 is None:
+        state_l2 = rb_h.get("dynamic_state_divergence_l2") or 0.0
+    js = pairwise.get("js")
+    if js is None:
+        js = rb_h.get("output_distribution_js") or 0.0
     reset_ok = (redblue.get("headline") or {}).get("reset_ablates_effect")
     if reset_ok is None:
         rc = div.get("reset_control") or {}

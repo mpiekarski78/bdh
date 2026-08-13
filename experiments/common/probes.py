@@ -9,8 +9,12 @@ import torch
 
 
 def encode_bytes(text: str, device: torch.device | str | None = None) -> torch.Tensor:
-    """UTF-8 bytes as LongTensor shape (1, T)."""
-    data = list(text.encode("utf-8"))
+    """Encode as raw bytes (vocab 256). Use latin-1 so byte value == token id.
+
+    UTF-8 would split bytes 128–255 into multi-token sequences and would not
+    match upstream train.py, which reads Tiny Shakespeare as uint8.
+    """
+    data = list(text.encode("latin-1"))
     t = torch.tensor(data, dtype=torch.long)
     if device is not None:
         t = t.to(device)

@@ -73,11 +73,10 @@ def main() -> None:
 
     line_a = streams["line_a"]
     line_b = streams["line_b"]
-    # Neutral/noise chunked per exposure for time series
-    chunk_len = len(line_a.encode("utf-8"))
-    hist_c = streams["history_c"]
-    hist_n = streams["history_noise"]
-    hist_a2 = streams["history_a"]
+    # Neutral/noise chunked per exposure for time series (byte-aligned).
+    chunk_len = len(line_a.encode("latin-1"))
+    hist_c = streams["history_c"].encode("latin-1")
+    hist_n = streams["history_noise"].encode("latin-1")
 
     rows = []
     probe = encode_bytes(streams["probe"], device)
@@ -94,8 +93,8 @@ def main() -> None:
         models["B"].step(encode_bytes(line_b, device))
         # C and N consume matched-length chunks
         start = (step - 1) * chunk_len
-        models["C"].step(encode_bytes(hist_c[start : start + chunk_len], device))
-        models["N"].step(encode_bytes(hist_n[start : start + chunk_len], device))
+        models["C"].step(encode_bytes(hist_c[start : start + chunk_len].decode("latin-1"), device))
+        models["N"].step(encode_bytes(hist_n[start : start + chunk_len].decode("latin-1"), device))
         models["A2"].step(encode_bytes(line_a, device))
 
         d_ab = rho_distance(models["A"].get_state_snapshot(), models["B"].get_state_snapshot())
@@ -137,21 +136,6 @@ def main() -> None:
             }
         )
 
-    # Final probes + reset control
-    la, acta, sa = _probe_bundle(models["A"], probe, ta, tb)
-    # A already stepped probe; reload from last experience-only state via re-run is heavy.
-    # Instead snapshot before final section:
-    # Re-create clean final measurement:
-    for name, hist in (
-        ("A", streams["history_a"]),
-        ("B", streams["history_b"]),
-        ("C", streams["history_c"]),
-        ("N", streams["history_noise"]),
-        ("A2", streams["history_a"]),
-    ):
-        models[name].reset_dynamic_state(1)
-        models[name].step(encode_bytes(hist, device))
-
     hashes_after = {k: hash_trainable_params(m.model) for k, m in models.items()}
 
     finals = {}
@@ -185,9 +169,7 @@ def main() -> None:
             "activation": activation_divergence(acts["A"], acts[other]),
         }
 
-    # Control 1: reset then probe
-    snap_a = models["A"].get_state_snapshot()
-    # A already probed once; reset dynamic state
+    # Control 1: reset then probe (snaps[] were taken before probing)
     models["A"].reset_dynamic_state(1)
     models["B"].reset_dynamic_state(1)
     la_reset = models["A"].step(probe)
@@ -195,8 +177,7 @@ def main() -> None:
     reset_out = output_divergence(la_reset, lb_reset, target_a=ta, target_b=tb)
     reset_state = rho_distance(models["A"].get_state_snapshot(), models["B"].get_state_snapshot())
 
-    # Restore A snap to confirm persistence API (also used by restore experiment)
-    models["A"].load_state_snapshot(snap_a)
+    models["A"].load_state_snapshot(snaps["A"])
 
     weights_changed = {k: hashes_before[k] != hashes_after[k] for k in hashes_before}
 
